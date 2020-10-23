@@ -1,8 +1,5 @@
-# This is the first draft of the calgem scraper
+# This is the second draft of the calgem scraper
 import re
-import urllib.request
-
-import requests
 import urllib3
 from bs4 import BeautifulSoup
 
@@ -22,29 +19,6 @@ def get_api_data():
 
     #pulls elems of the header
     job_elems = soup.find_all(class_="panel-body")
-    #test = job_elems[0]
-
-    #removing br from the header
-    #for linebreak in soup.find_all('br'):
-    #    linebreak.extract()
-
-    #test print
-    #print(test.prettify())
-
-    #storing API
-    #api = test.find(id="wellAPI").get_text()
-    #print(api)
-
-    #storing Lease
-    #lease = test.find(class_="col-sm-3").get_text()
-    #lease = lease.strip('\n')
-    #lease = lease.replace("Lease", "")
-    #lease = lease.replace(" ","")
-    #lease = lease.replace("                        ", "")
-    #lease = lease.replace("                    ", "")
-    #print(lease)
-
-    #Well number
 
     #================================================= URL STUFF ======================================================#
 
@@ -57,9 +31,10 @@ def get_api_data():
     url = url.replace("\"", "")
     #print(url)
 
-    #download the pdf
+    #download the pdf uncomment to save locally
     #urllib.request.urlretrieve(url, "test.pdf")
 
+    #================================================= HEADER DATA ====================================================#
     #collecting all labels from the file
     labels = []
     for label_list in soup.select('label'):
@@ -74,7 +49,6 @@ def get_api_data():
         data_fields.append(re.sub('<[^>]+>', '', str(data_elem)))
         data = [sub.replace('\n', '').replace('\r', '') for sub in data_fields]
 
-
     #removing labels from collected data fields
     new_strings = []
     for x in data:
@@ -82,8 +56,8 @@ def get_api_data():
         new_string = x.replace("API #", "").replace("Lease","").replace("Well #","").replace("County", "").replace("District", "").replace("Operator", "").replace("Field", "").replace("Area", "").replace("Section","").replace("Township","").replace("Range","").replace("Base Meridian","").replace("Well Status","").replace("Pool WellTypes","").replace("SPUD Date","").replace("GIS Source","").replace("Datum","").replace("Latitude","").replace("Longitude","")
         new_string = new_string.strip()
         new_strings.append(new_string)
-    print(new_strings)
-    print(labels)
+    #print(new_strings)
+    #print(labels)
 
     #creating a dictionary that maps data fields to the labels
     print(Convert(labels,new_strings))
@@ -92,9 +66,7 @@ def get_api_data():
 if __name__ == '__main__':
     get_api_data()
 
-
 #assign variables to data from each field <--DONE
 #have a function to easily print header data <-- DONE
 #download the pdf to a given folder <-- DONE
 #collect all labels from header info and store them in an array <-- DONE
-
