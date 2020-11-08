@@ -1,6 +1,16 @@
 # This is the second draft of the calgem scraper
+import csv
+import io
 import re
 import urllib3
+import pandas as pd
+import boto3
+from botocore.client import ClientError
+import numpy as np
+
+import os
+import os.path
+from botocore.exceptions import ClientError, NoCredentialsError
 from bs4 import BeautifulSoup
 
 #creating a dictionary for results
@@ -14,6 +24,8 @@ def get_api_data():
     #initializing url and soup
     http = urllib3.PoolManager()
     url = 'https://secure.conservation.ca.gov/WellSearch/Details?api=02927040&District=&County=029&Field=228&Operator=&Lease=&APINum=&address=&ActiveWell=true&ActiveOp=true&Location=&sec=&twn=&rge=&bm=&PgStart=0&PgLength=10&SortCol=6&SortDir=asc&Command=Search'
+    #url with api
+    url_api = 'https://secure.conservation.ca.gov/WellSearch/Details?api=02927040&District=&County=&Field=&Operator=&Lease=&APINum=02927040&address=&ActiveWell=true&ActiveOp=true&Location=&sec=&twn=&rge=&bm=&PgStart=0&PgLength=10&SortCol=6&SortDir=asc&Command=Search'
     response = http.request('GET', url)
     soup = BeautifulSoup(response.data, "html.parser")
 
@@ -59,8 +71,23 @@ def get_api_data():
     #print(new_strings)
     #print(labels)
 
-    #creating a dictionary that maps data fields to the labels
-    print(Convert(labels,new_strings))
+    #================================================= HEADER DATA ====================================================#
+
+    #uploading header data to s3 bucket
+    s3 = boto3.client('s3', verify = False)
+    output_bucket = 'crcdal-well-data'
+    s3_key = '/calgem-webscrape/sample.csv'
+    s3.upload_file('sample.csv', output_bucket, s3_key)
+
+    #s3.meta.client.upload_file('sample.csv','crcdal-well-data','sample.csv')
+
+    #creating header dataframe
+    #df = pd.DataFrame([new_strings], columns=labels)
+    #df.to_csv('sample.csv')
+
+    #df2 = pd.read_csv('sample.csv', sep=',')
+    #np.asarray(df2.values).tofile('data_binary.dat')
+
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
@@ -70,3 +97,11 @@ if __name__ == '__main__':
 #have a function to easily print header data <-- DONE
 #download the pdf to a given folder <-- DONE
 #collect all labels from header info and store them in an array <-- DONE
+#change header output to datafram csv <-- DONE
+
+#accepts api number as a function input <-- check with Nathan on functionality
+
+#iterate through the full list of APIs available
+#download to the location Nathan specifies
+#run tests to see where it outputs
+
