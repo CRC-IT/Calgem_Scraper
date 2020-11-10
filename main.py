@@ -26,7 +26,7 @@ def get_api_data():
     url = 'https://secure.conservation.ca.gov/WellSearch/Details?api=02927040&District=&County=029&Field=228&Operator=&Lease=&APINum=&address=&ActiveWell=true&ActiveOp=true&Location=&sec=&twn=&rge=&bm=&PgStart=0&PgLength=10&SortCol=6&SortDir=asc&Command=Search'
     #url with api
     url_api = 'https://secure.conservation.ca.gov/WellSearch/Details?api=02927040&District=&County=&Field=&Operator=&Lease=&APINum=02927040&address=&ActiveWell=true&ActiveOp=true&Location=&sec=&twn=&rge=&bm=&PgStart=0&PgLength=10&SortCol=6&SortDir=asc&Command=Search'
-    response = http.request('GET', url)
+    response = http.request('GET', url_api)
     soup = BeautifulSoup(response.data, "html.parser")
 
     #pulls elems of the header
@@ -68,25 +68,34 @@ def get_api_data():
         new_string = x.replace("API #", "").replace("Lease","").replace("Well #","").replace("County", "").replace("District", "").replace("Operator", "").replace("Field", "").replace("Area", "").replace("Section","").replace("Township","").replace("Range","").replace("Base Meridian","").replace("Well Status","").replace("Pool WellTypes","").replace("SPUD Date","").replace("GIS Source","").replace("Datum","").replace("Latitude","").replace("Longitude","")
         new_string = new_string.strip()
         new_strings.append(new_string)
-    #print(new_strings)
-    #print(labels)
 
-    #================================================= HEADER DATA ====================================================#
+
+    #create the csv for header data
+    df = pd.DataFrame.from_records(new_strings, columns=labels)
+
+    #df = df.append(new_strings, ignore_index=False)
+    #df = pd.DataFrame
+    #df.loc[len(df.index)] = labels
+
+    #create csv from dataframe
+    df.to_csv('api_2.csv')
+
+    #print(Convert(labels, new_strings))
+
+    #================================================= HEADER UPLOAD ====================================================#
 
     #uploading header data to s3 bucket
-    s3 = boto3.client('s3', verify = False)
-    output_bucket = 'crcdal-well-data'
-    s3_key = '/calgem-webscrape/sample.csv'
-    s3.upload_file('sample.csv', output_bucket, s3_key)
+    #s3 = boto3.client('s3', verify = False)
 
-    #s3.meta.client.upload_file('sample.csv','crcdal-well-data','sample.csv')
+    s3 = boto3.resource(service_name='s3', region_name='us-west-2', verify = False)
+    data = open('sample.csv', 'rb')
+    #s3.Bucket('crcdal-well-data').put_object(Key='crcdal-well-data\sample.csv', Body=data)
 
-    #creating header dataframe
-    #df = pd.DataFrame([new_strings], columns=labels)
-    #df.to_csv('sample.csv')
+    #s3 = boto3.resource('s3')
+    #output_bucket = 'crcdal-well-data'
+    #s3_key = '/calgem-webscrape/sample.csv'
+    #s3.upload_file('sample.csv', output_bucket, s3_key)
 
-    #df2 = pd.read_csv('sample.csv', sep=',')
-    #np.asarray(df2.values).tofile('data_binary.dat')
 
 
 # Press the green button in the gutter to run the script.
@@ -101,7 +110,7 @@ if __name__ == '__main__':
 
 #accepts api number as a function input <-- check with Nathan on functionality
 
-#iterate through the full list of APIs available
-#download to the location Nathan specifies
+#iterate through the full list of APIs available <-- sure let's fix this
+#download to the location Nathan specifies <-- WADJFAJDFIJAVIDJAFIJD
 #run tests to see where it outputs
 
