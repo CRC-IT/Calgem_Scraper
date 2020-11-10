@@ -2,6 +2,8 @@
 import csv
 import io
 import re
+import urllib
+
 import urllib3
 import pandas as pd
 import boto3
@@ -32,7 +34,7 @@ def get_api_data():
     #pulls elems of the header
     job_elems = soup.find_all(class_="panel-body")
 
-    #================================================= URL STUFF ======================================================#
+    #================================================= DOWNLOAD PDF DATA ==============================================#
 
     #getting url from the pdf
     sep = 'target'
@@ -44,7 +46,10 @@ def get_api_data():
     #print(url)
 
     #download the pdf uncomment to save locally
-    #urllib.request.urlretrieve(url, "test.pdf")
+    urllib.request.urlretrieve(url, "02927040.pdf")
+
+    s3 = boto3.resource('s3', verify = False)
+    s3.meta.client.upload_file('02927040.pdf', 'crc-convert-pdf', '02927040.pdf')
 
     #================================================= HEADER DATA ====================================================#
     #collecting all labels from the file
@@ -75,7 +80,7 @@ def get_api_data():
     df = df.append([new_strings],ignore_index=True)
 
     #create csv from dataframe
-    df.to_csv('api_3.csv')
+    df.to_csv('sample.csv')
 
     #old function for creating a dictionary from the two lists
     #print(Convert(labels, new_strings))
@@ -83,18 +88,7 @@ def get_api_data():
     #================================================= HEADER UPLOAD ====================================================#
 
     #uploading header data to s3 bucket
-    #s3 = boto3.client('s3', verify = False)
-
-    s3 = boto3.resource(service_name='s3', region_name='us-west-2', verify = False)
-    data = open('sample.csv', 'rb')
-    #s3.Bucket('crcdal-well-data').put_object(Key='crcdal-well-data\sample.csv', Body=data)
-
-    #s3 = boto3.resource('s3')
-    #output_bucket = 'crcdal-well-data'
-    #s3_key = '/calgem-webscrape/sample.csv'
-    #s3.upload_file('sample.csv', output_bucket, s3_key)
-
-
+    s3.meta.client.upload_file('sample.csv', 'crcdal-well-data', 'calgem-webscrape/sample.csv')
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
@@ -105,10 +99,10 @@ if __name__ == '__main__':
 #download the pdf to a given folder <-- DONE
 #collect all labels from header info and store them in an array <-- DONE
 #change header output to datafram csv <-- DONE
+#upload the header csv to the location Nathan specifies <-- DONE
+#output downloaded file to convert folder <-- DONE
 
 #accepts api number as a function input <-- check with Nathan on functionality
-
-#iterate through the full list of APIs available <-- sure let's fix this
-#download to the location Nathan specifies <-- WADJFAJDFIJAVIDJAFIJD
-#run tests to see where it outputs
+#accept a list of api's as input <-- check with Nathan
+#automate the output of header csv to be the name of the api <-- check with Nathan
 
