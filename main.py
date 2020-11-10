@@ -69,17 +69,15 @@ def get_api_data():
         new_string = new_string.strip()
         new_strings.append(new_string)
 
-
     #create the csv for header data
-    df = pd.DataFrame.from_records(new_strings, columns=labels)
-
-    #df = df.append(new_strings, ignore_index=False)
-    #df = pd.DataFrame
-    #df.loc[len(df.index)] = labels
+    df = pd.DataFrame()
+    df = df.append([labels],ignore_index=True)
+    df = df.append([new_strings],ignore_index=True)
 
     #create csv from dataframe
-    df.to_csv('api_2.csv')
+    df.to_csv('api_3.csv')
 
+    #old function for creating a dictionary from the two lists
     #print(Convert(labels, new_strings))
 
     #================================================= HEADER UPLOAD ====================================================#
