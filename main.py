@@ -15,41 +15,35 @@ import os.path
 from botocore.exceptions import ClientError, NoCredentialsError
 from bs4 import BeautifulSoup
 
-#creating a dictionary for results
-def Convert(lst1, lst2):
-    results = {lst1[i]: lst2[i] for i in range(0, len(lst1), 1)}
-    return results
-
 #get header function
-def get_api_data():
-
+def get_api_data(apiNum):
     #initializing url and soup
     http = urllib3.PoolManager()
-    url = 'https://secure.conservation.ca.gov/WellSearch/Details?api=02927040&District=&County=029&Field=228&Operator=&Lease=&APINum=&address=&ActiveWell=true&ActiveOp=true&Location=&sec=&twn=&rge=&bm=&PgStart=0&PgLength=10&SortCol=6&SortDir=asc&Command=Search'
-    #url with api
-    url_api = 'https://secure.conservation.ca.gov/WellSearch/Details?api=02927040&District=&County=&Field=&Operator=&Lease=&APINum=02927040&address=&ActiveWell=true&ActiveOp=true&Location=&sec=&twn=&rge=&bm=&PgStart=0&PgLength=10&SortCol=6&SortDir=asc&Command=Search'
+    url_api = 'https://secure.conservation.ca.gov/WellSearch/Details?api=########&District=&County=&Field=&Operator=&Lease=&APINum=########&address=&ActiveWell=true&ActiveOp=true&Location=&sec=&twn=&rge=&bm=&PgStart=0&PgLength=10&SortCol=6&SortDir=asc&Command=Search'
+    url_api = url_api.replace("########", apiNum)
     response = http.request('GET', url_api)
     soup = BeautifulSoup(response.data, "html.parser")
 
-    #pulls elems of the header
-    job_elems = soup.find_all(class_="panel-body")
-
     #================================================= DOWNLOAD PDF DATA ==============================================#
 
-    #getting url from the pdf
+    #getting download linkf for the pdf
     sep = 'target'
     soup.find_all("a", href=re.compile(r"_DATA_"))
-    url = str(soup.find_all("a", href=lambda href: href and "_DATA" in href))
-    url = url.strip("[<a href=" "")
-    url = url.split(sep, 1)[0]
-    url = url.replace("\"", "")
-    #print(url)
+    url_api = str(soup.find_all("a", href=lambda href: href and "_DATA" in href))
+    url_api = url_api.strip("[<a href=" "")
+    url_api = url_api.split(sep, 1)[0]
+    url_api = url_api.replace("\"", "")
 
     #download the pdf uncomment to save locally
-    urllib.request.urlretrieve(url, "02927040.pdf")
+    pdfName = apiNum +'.pdf'
+    urllib.request.urlretrieve(url_api, pdfName)
 
+    #Upload the pdf for conversion
     s3 = boto3.resource('s3', verify = False)
-    s3.meta.client.upload_file('02927040.pdf', 'crc-convert-pdf', '02927040.pdf')
+    s3.meta.client.upload_file(pdfName, 'crc-convert-pdf', pdfName)
+
+    #testing the remove function
+    os.remove(pdfName)
 
     #================================================= HEADER DATA ====================================================#
     #collecting all labels from the file
@@ -79,20 +73,23 @@ def get_api_data():
     df = df.append([labels],ignore_index=True)
     df = df.append([new_strings],ignore_index=True)
 
-    #create csv from dataframe
-    df.to_csv('sample.csv')
-
-    #old function for creating a dictionary from the two lists
-    #print(Convert(labels, new_strings))
+    #store csv from dataframe to local machine
+    headerDataName = 'headerData_' + apiNum + '.csv'
+    df.to_csv(headerDataName)
 
     #================================================= HEADER UPLOAD ====================================================#
 
     #uploading header data to s3 bucket
-    s3.meta.client.upload_file('sample.csv', 'crcdal-well-data', 'calgem-webscrape/sample.csv')
+    outputFolder = 'calgem-webscrape/' + headerDataName
+    s3.meta.client.upload_file(headerDataName, 'crcdal-well-data', outputFolder)
+    os.remove(headerDataName)
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    get_api_data()
+    #Accept api number as an input
+    apiNum = input("Enter api number: ")
+    print(apiNum)
+    get_api_data(apiNum)
 
 #assign variables to data from each field <--DONE
 #have a function to easily print header data <-- DONE
@@ -101,8 +98,7 @@ if __name__ == '__main__':
 #change header output to datafram csv <-- DONE
 #upload the header csv to the location Nathan specifies <-- DONE
 #output downloaded file to convert folder <-- DONE
+#accepts api number as a function input <-- DONE
+#automate the output of header csv to be the name of the api <-- DONE
 
-#accepts api number as a function input <-- check with Nathan on functionality
 #accept a list of api's as input <-- check with Nathan
-#automate the output of header csv to be the name of the api <-- check with Nathan
-
