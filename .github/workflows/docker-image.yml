@@ -1,0 +1,24 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build the Base Docker image
+      env: # Or as an environment variable
+        # crcdal-lambda-envs
+        LAYER_ENV_BUCKET: ${{ secrets.LAYER_ENV_BUCKET }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
+        AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+      run: docker build . --file Dockerfile --tag calgem_scraper:$(date +%s) --build-arg package_name=calgem_scraper --build-arg bucket_name=$LAYER_ENV_BUCKET --build-arg zip_file_name=calgem_scraper.zip --build-arg AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID --build-arg AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY --build-arg AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION --build-arg layer_name=calgem-scraper
