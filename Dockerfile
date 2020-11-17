@@ -6,6 +6,9 @@ ARG layer_name
 ARG AWS_ACCESS_KEY_ID
 ARG AWS_SECRET_ACCESS_KEY
 ARG AWS_DEFAULT_REGION
+RUN export AWS_ACCESS_KEY_ID
+RUN export AWS_SECRET_ACCESS_KEY
+RUN export AWS_DEFAULT_REGION
 RUN mkdir pkg_build
 WORKDIR /srv/pkg_build
 RUN python3 -m venv temp_env
