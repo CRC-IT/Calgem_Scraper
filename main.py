@@ -1,4 +1,4 @@
-# This is the second draft of the calgem scraper
+# This is the second draft of the calgem scraper, rerunning action
 import csv
 import io
 import re
