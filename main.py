@@ -1,18 +1,12 @@
-# This is the second draft of the calgem scraper, rerunning action
-import csv
+# This is the second draft of the calgem scraper
 import io
 import re
 import urllib
-
 import urllib3
 import pandas as pd
 import boto3
-from botocore.client import ClientError
-import numpy as np
-
 import os
 import os.path
-from botocore.exceptions import ClientError, NoCredentialsError
 from bs4 import BeautifulSoup
 
 #get header function
@@ -26,7 +20,7 @@ def get_api_data(apiNum):
 
     #================================================= DOWNLOAD PDF DATA ==============================================#
 
-    #getting download linkf for the pdf
+    #getting download link for the pdf
     sep = 'target'
     soup.find_all("a", href=re.compile(r"_DATA_"))
     url_api = str(soup.find_all("a", href=lambda href: href and "_DATA" in href))
@@ -36,21 +30,19 @@ def get_api_data(apiNum):
 
     #download the pdf uncomment to save locally
     pdfName = apiNum +'.pdf'
-    urllib.request.urlretrieve(url_api, pdfName)
+    response = urllib.request.urlopen(url_api)
+    p = io.BytesIO(response.read())
+    p.seek(0, os.SEEK_END)
 
     #Upload the pdf for conversion
     s3 = boto3.resource('s3', verify = False)
-    s3.meta.client.upload_file(pdfName, 'crc-convert-pdf', pdfName)
-
-    #testing the remove function
-    os.remove(pdfName)
+    s3.Object('crc-convert-pdf', pdfName).put(Body=p.getvalue())
 
     #================================================= HEADER DATA ====================================================#
     #collecting all labels from the file
     labels = []
     for label_list in soup.select('label'):
         labels.append(label_list.string)
-        #print(labels)
 
     #collect all data fields from the file
     data_elems = soup.find_all(class_=["col-sm-1","col-sm-2","col-sm-3","col-sm-4","col-sm-5"])
@@ -75,14 +67,15 @@ def get_api_data(apiNum):
 
     #store csv from dataframe to local machine
     headerDataName = 'headerData_' + apiNum + '.csv'
-    df.to_csv(headerDataName)
 
     #================================================= HEADER UPLOAD ====================================================#
 
     #uploading header data to s3 bucket
-    outputFolder = 'calgem-webscrape/' + headerDataName
-    s3.meta.client.upload_file(headerDataName, 'crcdal-well-data', outputFolder)
-    os.remove(headerDataName)
+    output_bucket ='crcdal-well-data'
+    key = 'calgem-webscrape/' + headerDataName
+    csv_buffer = io.StringIO()
+    df.to_csv(csv_buffer)
+    s3.Object(output_bucket, key).put(Body=csv_buffer.getvalue())
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
@@ -101,4 +94,6 @@ if __name__ == '__main__':
 #accepts api number as a function input <-- DONE
 #automate the output of header csv to be the name of the api <-- DONE
 
-#accept a list of api's as input <-- check with Nathan
+#accept a list of api's as input <-- IMPLEMENTED IN scrape_calgem_for_api.py
+#change output to write with BytesIO buffer <-- DONE
+#use something else to send out PDFs <-- DONE
