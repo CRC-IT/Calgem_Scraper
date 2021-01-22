@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 def get_api_data(apiNum):
     # initializing url and soup
     http = urllib3.PoolManager()
-    url_api = 'https://secure.conservation.ca.gov/WellSearch/Details?api=########&District=&County=&Field=&Operator=&Lease=&APINum=########&address=&ActiveWell=true&ActiveOp=true&Location=&sec=&twn=&rge=&bm=&PgStart=0&PgLength=10&SortCol=6&SortDir=asc&Command=Search'
+    url_api = 'https://secure.conservation.ca.gov/WellSearch/Details?api=########&District=&County=&Field=&Operator=&Lease=&APINum=########&address=&ActiveWell=&ActiveOp=true&Location=&sec=&twn=&rge=&bm=&PgStart=0&PgLength=10&SortCol=6&SortDir=asc&Command=Search'
     url_api = url_api.replace("########", apiNum)
     response = http.request('GET', url_api)
     soup = BeautifulSoup(response.data, "html.parser")
